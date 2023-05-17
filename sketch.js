@@ -32,7 +32,7 @@ function draw() {
   stroke(0);
 
   // Draw shape with size based on volume
-  circle(width / 2, height / 2, 100 + volumeInput * 1600, 100 + volumeInput * 1600);
+  circle(width / 2, height / 2, 100 + volumeInput * windowWidth, 100 + volumeInput * windowHeight);
 
 
   let spectrum = fft.analyze();
