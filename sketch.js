@@ -35,7 +35,7 @@ function draw() {
   let easing = 0.05;
   sphereSize += (targetSize - sphereSize) * easing;
 
-  rotateY(frameCount * 0.01); // Rotate the sphere
+  rotateY(frameCount * 0.001); // Rotate the sphere
   sphere(sphereSize);
 
   let spectrum = fft.analyze();
