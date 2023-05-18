@@ -12,6 +12,10 @@ function preload() {
 }
 
 function setup() {
+
+  // Enable anti-aliasing
+  smooth();
+
   // Create the canvas
   createCanvas(windowWidth, windowHeight, WEBGL);
   
@@ -37,9 +41,9 @@ function draw() {
 
   // Randomly update the target ellipsoid size
   if (random() < 0.001) {
-    targetEllipsoidSize.width = random(max(targetSize * 0.5, 1600), targetSize * 1.5);
-    targetEllipsoidSize.height = random(max(targetSize * 0.5, 1600), targetSize * 1.5);
-    targetEllipsoidSize.depth = random(max(targetSize * 0.5, 1600), targetSize * 1.5);
+    targetEllipsoidSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetEllipsoidSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetEllipsoidSize.depth = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
   }
 
   // Smoothly update the ellipsoid size
