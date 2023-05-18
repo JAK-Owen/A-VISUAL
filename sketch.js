@@ -1,54 +1,53 @@
 let song, analyzer;
-let audio, fft;
-let sphereSize = 100;
+let ellipsoidSize = { width: 1600, height: 1600, depth: 1600 };
+let targetEllipsoidSize = { width: 1600, height: 1600, depth: 1600 };
+let easing = 0.01; // Decrease the easing value for slower transitions
+let filteredAmplitude = 0.0;
+let filterCoefficient = 0.2; // Adjust this value to control the smoothness of the filter
 
 function preload() {
   song = loadSound('N217.mp3');
 }
 
 function setup() {
-  createCanvas(1600, 1600, WEBGL); // Set up a WebGL canvas for 3D rendering
+  createCanvas(windowWidth, windowHeight, WEBGL);
   song.loop();
 
-  // Amplitude analyzer
   analyzer = new p5.Amplitude();
-
-  // Connects input to a volume analyzer
   analyzer.setInput(song);
-
-  // Audio input and FFT
-  audio = new p5.AudioIn();
-  audio.start();
-  fft = new p5.FFT();
-  fft.setInput(audio);
 }
 
 function draw() {
   background(255);
 
-  // Get the average amplitude
-  let volumeInput = analyzer.getLevel();
-  stroke(0);
+  // Smoothly update the filtered amplitude
+  let amplitude = analyzer.getLevel();
+  filteredAmplitude += (amplitude - filteredAmplitude) * filterCoefficient;
 
-  // Apply easing to smooth out size changes
-  let targetSize = 100 + volumeInput * min(windowWidth, windowHeight);
-  let easing = 0.05;
-  sphereSize += (targetSize - sphereSize) * easing;
+  let targetSize = map(filteredAmplitude, 0, 1, 100, 800);
+  targetSize = max(targetSize, 1600); // Set the minimum size to 1600
 
-  rotateY(frameCount * 0.001); // Rotate the sphere
-  rotateX(frameCount * 0.001); // Rotate the sphere
-  sphere(sphereSize);
-
-  let spectrum = fft.analyze();
-
-  beginShape();
-  for (let i = 0; i < spectrum.length; i++) {
-    vertex(i, map(spectrum[i], 0, 255, height, 0));
+  if (random() < 0.001) {
+    targetEllipsoidSize.width = random(max(targetSize * 0.5, 1600), targetSize * 1.5);
+    targetEllipsoidSize.height = random(max(targetSize * 0.5, 1600), targetSize * 1.5);
+    targetEllipsoidSize.depth = random(max(targetSize * 0.5, 1600), targetSize * 1.5);
   }
-  endShape();
+
+  ellipsoidSize.width += (targetEllipsoidSize.width - ellipsoidSize.width) * easing;
+  ellipsoidSize.height += (targetEllipsoidSize.height - ellipsoidSize.height) * easing;
+  ellipsoidSize.depth += (targetEllipsoidSize.depth - ellipsoidSize.depth) * easing;
+
+  rotateY(frameCount * 0.001);
+  rotateX(frameCount * 0.001);
+  let scaleValue = map(filteredAmplitude, 0, 1, 0.1, 2);
+  scale(scaleValue);
+
+  stroke(0);
+  strokeWeight(1);
+  noFill();
+  ellipsoid(ellipsoidSize.width, ellipsoidSize.height, ellipsoidSize.depth, 16);
 }
 
-// Play Button
 function mousePressed() {
   if (song.isPlaying()) {
     song.stop();
