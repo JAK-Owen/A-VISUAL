@@ -1,10 +1,10 @@
-// Declare variables
+
 let song, analyzer; // Audio objects
 let ellipsoidSize = { width: 1600, height: 1600, depth: 1600 }; // Current ellipsoid size
 let targetEllipsoidSize = { width: 1600, height: 1600, depth: 1600 }; // Target ellipsoid size
-let easing = 0.01; // Easing value for smooth transitions
+let easing = 0.001; // Easing value for smooth transitions
 let filteredAmplitude = 0.0; // Filtered amplitude value
-let filterCoefficient = 0.2; // for smoothness of the filter
+let filterCoefficient = 0.05; // for smoothness of the filter
 
 function preload() {
   // Load the audio file
