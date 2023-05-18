@@ -4,7 +4,7 @@ let ellipsoidSize = { width: 1600, height: 1600, depth: 1600 }; // Current ellip
 let targetEllipsoidSize = { width: 1600, height: 1600, depth: 1600 }; // Target ellipsoid size
 let easing = 0.001; // Easing value for smooth transitions
 let filteredAmplitude = 0.0; // Filtered amplitude value
-let filterCoefficient = 0.05; // for smoothness of the filter
+let filterCoefficient = 0.02; // for smoothness of the filter
 
 function preload() {
   // Load the audio file
@@ -29,7 +29,7 @@ function setup() {
 
 function draw() {
   // Clear the background
-  background(255);
+  background(0);
 
   // Smoothly update the filtered amplitude
   let amplitude = analyzer.getLevel();
@@ -59,12 +59,18 @@ function draw() {
   let scaleValue = map(filteredAmplitude, 0, 1, 0.1, 2);
   scale(scaleValue);
 
-  // Draw the ellipsoid
-  stroke(0);
+  // Draw the ellipsoid with white lines
+  stroke(255); // Set stroke color to white
   strokeWeight(1);
   noFill();
+  
+  // Set material properties for better visualization
+  ambientMaterial(255);
+  specularMaterial(255);
+
   ellipsoid(ellipsoidSize.width, ellipsoidSize.height, ellipsoidSize.depth, 16);
 }
+
 
 function mousePressed() {
   // Toggle playback and change background color
