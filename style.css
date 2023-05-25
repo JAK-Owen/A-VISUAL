@@ -1,7 +1,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #000000;
+  background-color: #333333;
 }
 canvas {
   
@@ -9,11 +9,5 @@ canvas {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* filter:invert(); */
   
-}
-
-button {
-  z-index: 2;
-  position: absolute;
 }
