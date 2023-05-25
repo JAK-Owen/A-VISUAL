@@ -1,79 +1,131 @@
+let song, analyzer;
+let shapeSize = { width: 1600, height: 1600, depth: 1600 };
+let targetshapeSize = { width: 1600, height: 1600, depth: 1600 };
+let easing = 0.0001;
+let filteredAmplitude = 0.0;
+let filterCoefficient = 0.02;
 
-let song, analyzer; // Audio objects
-let ellipsoidSize = { width: 1600, height: 1600, depth: 1600 }; // Current ellipsoid size
-let targetEllipsoidSize = { width: 1600, height: 1600, depth: 1600 }; // Target ellipsoid size
-let easing = 0.001; // Easing value for smooth transitions
-let filteredAmplitude = 0.0; // Filtered amplitude value
-let filterCoefficient = 0.02; // for smoothness of the filter
+let currentShapeIndex = 0;
+let targetShapeIndex = 0;
+let shapes = ["box", "sphere", "cylinder", "cone", "ellipsoid", "torus"];
+
+let shapeTimer = 0;
+let shapeDuration = 300;
 
 function preload() {
-  // Load the audio file
   song = loadSound('N217.mp3');
 }
 
 function setup() {
-
-  // Enable anti-aliasing
   smooth();
-
-  // Create the canvas
   createCanvas(windowWidth, windowHeight, WEBGL);
-  
-  // Loop the audio
   song.loop();
-
-  // Create an amplitude analyzer and set the input to the song
   analyzer = new p5.Amplitude();
   analyzer.setInput(song);
 }
 
 function draw() {
-  // Clear the background
   background(0);
 
-  // Smoothly update the filtered amplitude
   let amplitude = analyzer.getLevel();
   filteredAmplitude += (amplitude - filteredAmplitude) * filterCoefficient;
 
-  // Calculate the target size based on the filtered amplitude
   let targetSize = map(filteredAmplitude, 0, 1, 100, 800);
-  targetSize = max(targetSize, 1600); // Set the minimum size to 1600
+  targetSize = max(targetSize, 1600);
 
-  // Randomly update the target ellipsoid size
   if (random() < 0.001) {
-    targetEllipsoidSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetEllipsoidSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetEllipsoidSize.depth = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetshapeSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetshapeSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetshapeSize.depth = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+
+    targetShapeIndex = floor(random(shapes.length));
+
+    shapeTimer = 0; // Reset the shape timer
   }
 
-  // Smoothly update the ellipsoid size
-  ellipsoidSize.width += (targetEllipsoidSize.width - ellipsoidSize.width) * easing;
-  ellipsoidSize.height += (targetEllipsoidSize.height - ellipsoidSize.height) * easing;
-  ellipsoidSize.depth += (targetEllipsoidSize.depth - ellipsoidSize.depth) * easing;
+  shapeSize.width += (targetshapeSize.width - shapeSize.width) * easing;
+  shapeSize.height += (targetshapeSize.height - shapeSize.height) * easing;
+  shapeSize.depth += (targetshapeSize.depth - shapeSize.depth) * easing;
 
-  // Rotate the canvas based on frameCount
+  let morphedShape = morphShape(currentShapeIndex, targetShapeIndex, easing);
+
   rotateY(frameCount * 0.001);
   rotateX(frameCount * 0.001);
 
-  // Scale the canvas based on the filtered amplitude
   let scaleValue = map(filteredAmplitude, 0, 1, 0.1, 2);
   scale(scaleValue);
 
-  // Draw the ellipsoid with white lines
-  stroke(255); // Set stroke color to white
+  stroke(255);
   strokeWeight(1);
   noFill();
-  
-  // Set material properties for better visualization
   ambientMaterial(255);
   specularMaterial(255);
 
-  ellipsoid(ellipsoidSize.width, ellipsoidSize.height, ellipsoidSize.depth, 16);
+  // Draw the current shape
+  drawShape(currentShapeIndex);
+
+  // Increment the shape timer
+  shapeTimer++;
+
+  // If the shape timer exceeds the duration, update the current shape
+  if (shapeTimer >= shapeDuration) {
+    currentShapeIndex = targetShapeIndex;
+  }
+
+  // Interpolate the shape towards the target shape
+  if (currentShapeIndex !== targetShapeIndex) {
+    let interpolation = shapeTimer / shapeDuration;
+    let intermediateShape = morphShape(currentShapeIndex, targetShapeIndex, interpolation);
+    if (intermediateShape !== currentShapeIndex) {
+      push();
+      let remainingTime = shapeDuration - shapeTimer;
+      let remainingProgress = remainingTime / shapeDuration;
+      let scaleFactor = map(remainingProgress, 0, 1, 0, 1);
+      scale(scaleFactor);
+      drawShape(intermediateShape);
+      pop();
+    }
+  }
 }
 
+function morphShape(startIndex, endIndex, amount) {
+  let morphedIndex = startIndex;
+
+  if (startIndex !== endIndex) {
+    morphedIndex = lerp(startIndex, endIndex, amount);
+
+    if (morphedIndex >= shapes.length) {
+      morphedIndex -= shapes.length;
+    }
+  }
+
+  return morphedIndex;
+}
+
+function drawShape(index) {
+  switch (shapes[index]) {
+    case "box":
+      box(shapeSize.width, shapeSize.height, shapeSize.depth);
+      break;
+    case "sphere":
+      sphere(max(shapeSize.width, shapeSize.height, shapeSize.depth) / 2);
+      break;
+    case "cylinder":
+      cylinder(shapeSize.width / 2, shapeSize.height);
+      break;
+    case "cone":
+      cone(shapeSize.width / 2, shapeSize.height);
+      break;
+    case "ellipsoid":
+      ellipsoid(shapeSize.width / 2, shapeSize.height / 2, shapeSize.depth / 2);
+      break;
+    case "torus":
+      torus(shapeSize.width / 2, shapeSize.height / 2);
+      break;
+  }
+}
 
 function mousePressed() {
-  // Toggle playback and change background color
   if (song.isPlaying()) {
     song.stop();
   } else {
