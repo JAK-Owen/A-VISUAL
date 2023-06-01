@@ -11,9 +11,12 @@ let targetShapeIndex = 0; // Target shape index
 let shapes = ["box", "sphere", "cylinder", "cone", "ellipsoid", "torus"]; // Available shapes
 
 let shapeTimer = 0; // Timer for shape transitions
-let shapeDuration = 300; // Duration for each shape
+let shapeDuration = 500; // Duration for each shape transition
 
 let interpolationFactor = 0.0; // Factor for shape interpolation
+
+let numVerticals = 2; // Number of vertical lines
+let sparseFactor = 1; // Sparse factor for skipping lines
 
 // Preload function to load the audio file
 function preload() {
@@ -39,9 +42,9 @@ function draw() {
 
   // Randomly change the target shape and reset the shape timer
   if (random() < 0.001) {
-    targetShapeSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetShapeSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetShapeSize.depth = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetShapeSize.width = random(max(targetSize * 0.5, 1600), targetSize * 2);
+    targetShapeSize.height = random(max(targetSize * 0.5, 1600), targetSize * 2);
+    targetShapeSize.depth = random(max(targetSize * 0.5, 1600), targetSize * 2);
 
     targetShapeIndex = floor(random(shapes.length));
 
@@ -84,8 +87,25 @@ function draw() {
   }
 
   // Gradually increase the interpolation factor during shape transitions
-  if (currentShapeIndex !== targetShapeIndex && interpolationFactor < 0.0) {
-    interpolationFactor += 0.001;
+  if (currentShapeIndex !== targetShapeIndex && interpolationFactor < 1.0) {
+    interpolationFactor += 0.01;
+  }
+
+  // Draw sparse vertical lines between shapes
+  for (let i = 0; i < numVerticals; i += sparseFactor) {
+    let lerpFactor = i / (numVerticals - 1); // Calculate the interpolation factor for each line
+    let interpolatedSize = {
+      width: lerp(shapeSize.width, targetShapeSize.width, lerpFactor),
+      height: lerp(shapeSize.height, targetShapeSize.height, lerpFactor),
+      depth: lerp(shapeSize.depth, targetShapeSize.depth, lerpFactor)
+    };
+
+    let x = map(i, 0, numVerticals - 1, -width / 2, width / 2); // Calculate the x position of the line
+
+    push(); // Save the current drawing state
+    translate(x, 0, 0); // Translate to the x position
+    drawShape(currentShapeIndex, interpolatedSize); // Draw the line shape
+    pop(); // Restore the previous drawing state
   }
 }
 
