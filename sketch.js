@@ -15,7 +15,7 @@ let noiseIncrement = 0.0001; // Increment value for Perlin noise
 let minAmplitude = 0.02; // Minimum amplitude threshold
 let maxAmplitude = 1.0; // Maximum amplitude threshold
 let minSubdivisions = 0; // Minimum number of subdivisions for the fractal shape
-let maxSubdivisions = 5; // Maximum number of subdivisions for the fractal shape
+let maxSubdivisions = 4; // Maximum number of subdivisions for the fractal shape
 let subdivisionFactor = 0.95; // Factor to determine the size of subdivisions
 
 function preload() {
@@ -23,7 +23,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL); // Create a WebGL canvas
+  createCanvas(windowWidth, windowHeight, WEBGL); // Create a WebGL canvas with full window size
   song.loop(); // Loop the song
   analyzer = new p5.Amplitude(); // Create an amplitude analyzer object
   analyzer.setInput(song); // Set the input for the analyzer
