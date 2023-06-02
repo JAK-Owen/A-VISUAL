@@ -1,43 +1,46 @@
 // Declare variables and objects
-let song, analyzer; // Audio-related objects
-let shapeSize = { width: 1600, height: 1600, depth: 1600 }; // Current shape size
-let targetShapeSize = { width: 1600, height: 1600, depth: 1600 }; // Target shape size
-let easing = 0.01; // Easing value for smooth transitions
-let filteredAmplitude = 0.0; // Filtered audio amplitude
-let filterCoefficient = 0.02; // Coefficient for the low-pass filter
+let song, analyzer;
+let shapeSize = { width: 1600, height: 1600, depth: 1600 };
+let targetShapeSize = { width: 1600, height: 1600, depth: 1600 };
+let easing = 0.02;
+let filteredAmplitude = 0.0;
+let filterCoefficient = 0.02;
 
-let currentShapeIndex = 0; // Current shape index
-let targetShapeIndex = 0; // Target shape index
-let shapes = ["box", "sphere", "cylinder", "cone", "ellipsoid", "torus"]; // Available shapes
+let currentShapeIndex = 0;
+let targetShapeIndex = 0;
+let shapes = ["box"];
 
-let shapeTimer = 0; // Timer for shape transitions
-let shapeDuration = 300; // Duration for each shape
+let shapeTimer = 0;
+let shapeDuration = 300;
 
-let interpolationFactor = 0.0; // Factor for shape interpolation
+let interpolationFactor = 0.0;
 
-// Preload function to load the audio file
+let noiseOffset = 0.0;
+let noiseIncrement = 0.0001;
+
+let maxSubdivisions = 0;
+let subdivisionFactor = 0.9;
+
 function preload() {
   song = loadSound('N217.mp3');
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL); // Create a 3D canvas
-  song.loop(); // Start playing the audio in a loop
-  analyzer = new p5.Amplitude(); // Create an amplitude analyzer object
-  analyzer.setInput(song); // Connect the audio input to the analyzer
+  createCanvas(windowWidth, windowHeight, WEBGL);
+  song.loop();
+  analyzer = new p5.Amplitude();
+  analyzer.setInput(song);
 }
 
 function draw() {
-  background(0); // Set the background color to black (RGB 0)
+  background(0);
 
-  let amplitude = analyzer.getLevel(); // Get the current audio amplitude
-  filteredAmplitude += (amplitude - filteredAmplitude) * filterCoefficient; // Smooth the amplitude using a low-pass filter
+  let amplitude = analyzer.getLevel();
+  filteredAmplitude += (amplitude - filteredAmplitude) * filterCoefficient;
 
-  // Map the filtered amplitude to a target shape size
   let targetSize = map(filteredAmplitude, 0, 1, 100, 800);
   targetSize = max(targetSize, 1600);
 
-  // Randomly change the target shape and reset the shape timer
   if (random() < 0.001) {
     targetShapeSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
     targetShapeSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
@@ -45,15 +48,13 @@ function draw() {
 
     targetShapeIndex = floor(random(shapes.length));
 
-    shapeTimer = 0; // Reset the shape timer
+    shapeTimer = 0;
   }
 
-  // Smoothly adjust the shape size towards the target size using easing
   shapeSize.width += (targetShapeSize.width - shapeSize.width) * easing;
   shapeSize.height += (targetShapeSize.height - shapeSize.height) * easing;
   shapeSize.depth += (targetShapeSize.depth - shapeSize.depth) * easing;
 
-  // Interpolate the shape index and size based on the current and target values
   let morphedShapeIndex = lerp(currentShapeIndex, targetShapeIndex, interpolationFactor);
   let morphedShapeSize = {
     width: lerp(shapeSize.width, targetShapeSize.width, interpolationFactor),
@@ -61,35 +62,63 @@ function draw() {
     depth: lerp(shapeSize.depth, targetShapeSize.depth, interpolationFactor)
   };
 
-  rotateY(frameCount * 0.001); // Rotate the 3D scene around the Y-axis
-  rotateX(frameCount * 0.001); // Rotate the 3D scene around the X-axis
+  rotateY(frameCount * 0.001);
+  rotateX(frameCount * 0.001);
 
-  let scaleValue = map(filteredAmplitude, 0, 1, 0.1, 2); // Map the filtered amplitude to a scale value
-  scale(scaleValue); // Apply the scale to the 3D scene
+  let scaleValue = map(filteredAmplitude, 0, 1, 0.1, 2);
+  scale(scaleValue);
 
-  stroke(255); // Set the stroke color to white
-  strokeWeight(1); // Set the stroke weight to 1
-  noFill(); // Disable filling shapes
-  ambientMaterial(255); // Set the ambient material to white
-  specularMaterial(255); // Set the specular material to white
+  let noiseValue = noise(noiseOffset);
+  let rotationAngle = map(noiseValue, 0, 1, -PI, PI);
+  rotateZ(rotationAngle);
 
-  drawShape(morphedShapeIndex, morphedShapeSize); // Draw the current shape
+  stroke(255);
+  strokeWeight(1);
+  noFill();
+  ambientMaterial(255);
+  specularMaterial(255);
 
-  shapeTimer++; // Increment the shape timer
+  maxSubdivisions = floor(map(filteredAmplitude, 0, 1, 0, 5)); // Calculate the maximum subdivisions based on the filtered amplitude
 
-  // If the shape timer exceeds the duration, update the current shape and reset the interpolation factor
+  drawFractalShape(morphedShapeIndex, morphedShapeSize, maxSubdivisions);
+
+  shapeTimer++;
+
   if (shapeTimer >= shapeDuration) {
     currentShapeIndex = targetShapeIndex;
-    interpolationFactor = 0.0; // Reset the interpolation factor
+    interpolationFactor = 0.0;
   }
 
-  // Gradually increase the interpolation factor during shape transitions
-  if (currentShapeIndex !== targetShapeIndex && interpolationFactor < 0.0) {
-    interpolationFactor += 0.001;
+  if (currentShapeIndex !== targetShapeIndex && interpolationFactor < 1.0) {
+    interpolationFactor += 0.01;
+  }
+
+  noiseOffset += noiseIncrement;
+}
+
+function drawFractalShape(index, size, subdivisions) {
+  if (subdivisions <= 0) {
+    drawShape(index, size);
+  } else {
+    for (let i = 0; i < 8; i++) {
+      let x = size.width * (i % 2 === 0 ? subdivisionFactor : -subdivisionFactor);
+      let y = size.height * (i % 4 < 2 ? subdivisionFactor : -subdivisionFactor);
+      let z = size.depth * (i < 4 ? subdivisionFactor : -subdivisionFactor);
+
+      let subSize = {
+        width: size.width * subdivisionFactor,
+        height: size.height * subdivisionFactor,
+        depth: size.depth * subdivisionFactor
+      };
+
+      push();
+      translate(x, y, z);
+      drawFractalShape(index, subSize, subdivisions - 1);
+      pop();
+    }
   }
 }
 
-// Function to draw a shape based on its index and size
 function drawShape(index, size) {
   switch (shapes[index]) {
     case "box":
@@ -113,16 +142,10 @@ function drawShape(index, size) {
   }
 }
 
-// Toggle audio playback when the mouse is pressed
-function mousePressed() {
+function mouseClicked() {
   if (song.isPlaying()) {
-    song.stop();
+    song.pause();
   } else {
     song.play();
   }
-}
-
-// Resize the canvas when the window size changes
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
 }
