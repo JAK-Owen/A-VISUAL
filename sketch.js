@@ -1,32 +1,32 @@
 // Declare variables and objects
-let song, analyzer; // Variables for the song and audio analyzer
+let song, analyzer; // Variables to hold the song and audio analyzer objects
 let shapeSize = { width: 1600, height: 1600, depth: 1600 }; // Initial size of the shape
 let targetShapeSize = { width: 1600, height: 1600, depth: 1600 }; // Target size of the shape
-let easing = 0.02; // Easing factor for smooth transitions
-let filteredAmplitude = 0.0; // Filtered amplitude of the audio
+let easing = 0.02; // Easing coefficient for smooth transitions
+let filteredAmplitude = 0.0; // Filtered amplitude value
 let filterCoefficient = 0.02; // Coefficient for filtering the amplitude
 
-let shapeTimer = 0; // Timer for changing the shape
-let shapeDuration = 300; // Duration between shape changes
+let shapeTimer = 0; // Timer to control shape changes
+let shapeDuration = 300; // Duration for shape changes
 
 let noiseOffset = 0.0; // Offset for Perlin noise
 let noiseIncrement = 0.0001; // Increment value for Perlin noise
 
 let minAmplitude = 0.02; // Minimum amplitude threshold
 let maxAmplitude = 1.0; // Maximum amplitude threshold
-let minSubdivisions = 0; // Minimum number of subdivisions
-let maxSubdivisions = 5; // Maximum number of subdivisions
-let subdivisionFactor = 0.95; // Factor for reducing size in each subdivision
+let minSubdivisions = 0; // Minimum number of subdivisions for the fractal shape
+let maxSubdivisions = 5; // Maximum number of subdivisions for the fractal shape
+let subdivisionFactor = 0.95; // Factor to determine the size of subdivisions
 
 function preload() {
-  song = loadSound('N217.mp3'); // Preload the audio file
+  song = loadSound('N217.mp3'); // Load the sound file
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL); // Create a WebGL canvas
-  song.loop(); // Loop the audio
-  analyzer = new p5.Amplitude(); // Create an amplitude analyzer
-  analyzer.setInput(song); // Set the input source for the analyzer
+  song.loop(); // Loop the song
+  analyzer = new p5.Amplitude(); // Create an amplitude analyzer object
+  analyzer.setInput(song); // Set the input for the analyzer
 }
 
 function draw() {
@@ -71,16 +71,12 @@ function draw() {
   ambientMaterial(255);
   specularMaterial(255);
 
-  // Calculate the maximum subdivisions based on the filtered amplitude
-  maxSubdivisions = map(filteredAmplitude, minAmplitude, maxAmplitude, minSubdivisions, maxSubdivisions);
-  maxSubdivisions = floor(maxSubdivisions); // Round down to the nearest integer
+  let subdivisions = floor(map(filteredAmplitude, minAmplitude, maxAmplitude, maxSubdivisions, minSubdivisions)); // Calculate the subdivisions based on the filtered amplitude
 
-  // Recursively draw the fractal shape
-  drawFractalShape(shapeSize, maxSubdivisions);
+  drawFractalShape(shapeSize, subdivisions);
 
-  shapeTimer++; // Increment the shape timer
+  shapeTimer++;
 
-  // Change the current shape to the target shape when the timer reaches the duration
   if (shapeTimer >= shapeDuration) {
     targetShapeSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
     targetShapeSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
@@ -92,7 +88,6 @@ function draw() {
   noiseOffset += noiseIncrement; // Increment the Perlin noise offset
 }
 
-// Recursive function to draw the fractal shape
 function drawFractalShape(size, subdivisions) {
   if (subdivisions <= 0) {
     box(size.width, size.height, size.depth); // Draw a box when there are no more subdivisions
@@ -110,7 +105,7 @@ function drawFractalShape(size, subdivisions) {
 
       push();
       translate(x, y, z);
-      drawFractalShape(subSize, subdivisions - 1); // Recursively draw the subdivided shape
+      drawFractalShape(subSize, subdivisions - 1); // Recursively call with reduced subdivisions
       pop();
     }
   }
