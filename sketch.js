@@ -111,7 +111,11 @@ function drawFractalShape(size, subdivisions) {
   }
 }
 
-function mouseClicked() {
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+function touchStarted() {
   if (song.isPlaying()) {
     song.pause();
   } else {
