@@ -40,9 +40,9 @@ function draw() {
 
   // Change the target shape size randomly after a certain duration
   if (random() < 0.001) {
-    targetShapeSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetShapeSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetShapeSize.depth = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetShapeSize.width = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
+    targetShapeSize.height = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
+    targetShapeSize.depth = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
 
     shapeTimer = 0; // Reset the shape timer
   }
@@ -78,9 +78,9 @@ function draw() {
   shapeTimer++;
 
   if (shapeTimer >= shapeDuration) {
-    targetShapeSize.width = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetShapeSize.height = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
-    targetShapeSize.depth = random(max(targetSize * 0.0, 1600), targetSize * 0.5);
+    targetShapeSize.width = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
+    targetShapeSize.height = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
+    targetShapeSize.depth = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
 
     shapeTimer = 0; // Reset the shape timer
   }
@@ -92,6 +92,14 @@ function drawFractalShape(size, subdivisions) {
   if (subdivisions <= 0) {
     box(size.width, size.height, size.depth); // Draw a box when there are no more subdivisions
   } else {
+    let amplitudeFactor = map(filteredAmplitude, minAmplitude, maxAmplitude, 0.5, 1.5); // Map the amplitude to a factor between 0.5 and 1.5
+
+    // Adjust the sensitivity at lower amplitudes
+    if (filteredAmplitude < 0.2) {
+      let sensitivityFactor = map(filteredAmplitude, minAmplitude, 0.2, 0.2, 1);
+      amplitudeFactor *= sensitivityFactor;
+    }
+
     for (let i = 0; i < 8; i++) {
       let x = size.width * (i % 2 === 0 ? subdivisionFactor : -subdivisionFactor);
       let y = size.height * (i % 4 < 2 ? subdivisionFactor : -subdivisionFactor);
@@ -108,6 +116,9 @@ function drawFractalShape(size, subdivisions) {
       drawFractalShape(subSize, subdivisions - 1); // Recursively call with reduced subdivisions
       pop();
     }
+
+    // Adjust the subdivision factor based on the amplitude
+    subdivisionFactor = amplitudeFactor;
   }
 }
 
