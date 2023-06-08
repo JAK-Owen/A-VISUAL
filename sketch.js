@@ -1,7 +1,7 @@
 // Declare variables and objects
-let song, analyzer; // Variables to hold the song and audio analyzer objects
-let shapeSize = { width: 1600, height: 1600, depth: 1600 }; // Initial size of the shape
-let targetShapeSize = { width: 1600, height: 1600, depth: 1600 }; // Target size of the shape
+let song, analyzer, fft; // Variables to hold the song, audio analyzer, and FFT objects
+let shapeSize = { width: 400, height: 400, depth: 400 }; // Initial size of the shape (default: simple cube)
+let targetShapeSize = { width: 400, height: 400, depth: 400 }; // Target size of the shape (default: simple cube)
 let easing = 0.02; // Easing coefficient for smooth transitions
 let filteredAmplitude = 0.0; // Filtered amplitude value
 let filterCoefficient = 0.02; // Coefficient for filtering the amplitude
@@ -12,11 +12,14 @@ let shapeDuration = 300; // Duration for shape changes
 let noiseOffset = 0.0; // Offset for Perlin noise
 let noiseIncrement = 0.0001; // Increment value for Perlin noise
 
-let minAmplitude = 0.02; // Minimum amplitude threshold
+let minAmplitude = 0.01; // Minimum amplitude threshold
 let maxAmplitude = 1.0; // Maximum amplitude threshold
 let minSubdivisions = 0; // Minimum number of subdivisions for the fractal shape
 let maxSubdivisions = 3; // Maximum number of subdivisions for the fractal shape
 let subdivisionFactor = 1.0; // Factor to determine the size of subdivisions
+
+let minThickness = 0.5; // Minimum thickness for lines
+let maxThickness = 5; // Maximum thickness for lines
 
 function preload() {
   song = loadSound('N217.mp3'); // Load the sound file
@@ -27,6 +30,8 @@ function setup() {
   song.loop(); // Loop the song
   analyzer = new p5.Amplitude(); // Create an amplitude analyzer object
   analyzer.setInput(song); // Set the input for the analyzer
+  fft = new p5.FFT(); // Create the FFT object
+  fft.setInput(song); // Set the input for the FFT
 }
 
 function draw() {
@@ -35,14 +40,18 @@ function draw() {
   let amplitude = analyzer.getLevel(); // Get the current audio level
   filteredAmplitude += (amplitude - filteredAmplitude) * filterCoefficient; // Smoothly filter the amplitude
 
+  let spectrum = fft.analyze(); // Get the frequency spectrum data
+  let lowFreqRange = fft.getEnergy("bass", "mid"); // Get the energy in the low frequency range (bass to mid)
+  let highFreqRange = fft.getEnergy("mid", "treble"); // Get the energy in the high frequency range (mid to treble)
+
   let targetSize = map(filteredAmplitude, 0, 1, 100, 800); // Map the filtered amplitude to a target size
-  targetSize = max(targetSize, 1600); // Ensure the target size is at least the initial size
+  targetSize = max(targetSize, 400); // Ensure the target size is at least the initial size
 
   // Change the target shape size randomly after a certain duration
   if (random() < 0.001) {
-    targetShapeSize.width = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
-    targetShapeSize.height = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
-    targetShapeSize.depth = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
+    targetShapeSize.width = random(max(targetSize * 0.5, 400), targetSize * 0.8);
+    targetShapeSize.height = random(max(targetSize * 0.5, 400), targetSize * 0.8);
+    targetShapeSize.depth = random(max(targetSize * 0.5, 400), targetSize * 0.8);
 
     shapeTimer = 0; // Reset the shape timer
   }
@@ -66,21 +75,24 @@ function draw() {
 
   // Set the stroke, fill, and material properties
   stroke(255);
-  strokeWeight(1);
   noFill();
   ambientMaterial(255);
   specularMaterial(255);
 
   let subdivisions = floor(map(filteredAmplitude, minAmplitude, maxAmplitude, maxSubdivisions, minSubdivisions)); // Calculate the subdivisions based on the filtered amplitude
 
+  // Adjust the thickness based on frequency ranges
+  let thickness = map(lowFreqRange, 0, 255, minThickness, maxThickness);
+  strokeWeight(thickness);
+
   drawFractalShape(shapeSize, subdivisions);
 
   shapeTimer++;
 
   if (shapeTimer >= shapeDuration) {
-    targetShapeSize.width = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
-    targetShapeSize.height = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
-    targetShapeSize.depth = random(max(targetSize * 0.2, 1600), targetSize * 0.5);
+    targetShapeSize.width = random(max(targetSize * 0.5, 400), targetSize * 0.8);
+    targetShapeSize.height = random(max(targetSize * 0.5, 400), targetSize * 0.8);
+    targetShapeSize.depth = random(max(targetSize * 0.5, 400), targetSize * 0.8);
 
     shapeTimer = 0; // Reset the shape timer
   }
@@ -96,7 +108,7 @@ function drawFractalShape(size, subdivisions) {
 
     // Adjust the sensitivity at lower amplitudes
     if (filteredAmplitude < 0.2) {
-      let sensitivityFactor = map(filteredAmplitude, minAmplitude, 0.2, 0.2, 1);
+      let sensitivityFactor = map(filteredAmplitude, minAmplitude, 0.2, 0.1, 1);
       amplitudeFactor *= sensitivityFactor;
     }
 
