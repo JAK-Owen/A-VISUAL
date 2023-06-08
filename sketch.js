@@ -2,7 +2,7 @@
 let song, analyzer, fft; // Variables to hold the song, audio analyzer, and FFT objects
 let shapeSize = { width: 400, height: 400, depth: 400 }; // Initial size of the shape (default: simple cube)
 let targetShapeSize = { width: 400, height: 400, depth: 400 }; // Target size of the shape (default: simple cube)
-let easing = 0.02; // Easing coefficient for smooth transitions
+let easing = 0.0002; // Easing coefficient for smooth transitions
 let filteredAmplitude = 0.0; // Filtered amplitude value
 let filterCoefficient = 0.02; // Coefficient for filtering the amplitude
 
@@ -20,8 +20,6 @@ let subdivisionFactor = 1.0; // Factor to determine the size of subdivisions
 
 let minThickness = 0.5; // Minimum thickness for lines
 let maxThickness = 5; // Maximum thickness for lines
-
-let currentSubdivisions = 0; // Current number of subdivisions
 
 function preload() {
   song = loadSound('N217.mp3'); // Load the sound file
@@ -81,13 +79,13 @@ function draw() {
   ambientMaterial(255);
   specularMaterial(255);
 
+  let subdivisions = floor(map(lowFreqRange, 0, 255, maxSubdivisions, minSubdivisions)); // Calculate the subdivisions based on the low frequency range
+
   // Adjust the thickness based on frequency ranges
   let thickness = map(highFreqRange, 0, 255, minThickness, maxThickness);
   strokeWeight(thickness);
 
-  updateSubdivisions(lowFreqRange); // Update the number of subdivisions based on low frequency range
-
-  drawFractalShape(shapeSize, currentSubdivisions); // Draw the fractal shape with the current number of subdivisions
+  drawFractalShape(shapeSize, subdivisions);
 
   shapeTimer++;
 
@@ -100,15 +98,6 @@ function draw() {
   }
 
   noiseOffset += noiseIncrement; // Increment the Perlin noise offset
-}
-
-function updateSubdivisions(lowFreqRange) {
-  // Calculate the target number of subdivisions based on the low frequency range
-  let targetSubdivisions = map(lowFreqRange, 0, 255, minSubdivisions, maxSubdivisions);
-  
-  // Smoothly transition the current subdivisions to the target subdivisions
-  currentSubdivisions += (targetSubdivisions - currentSubdivisions) * easing;
-  currentSubdivisions = constrain(currentSubdivisions, minSubdivisions, maxSubdivisions);
 }
 
 function drawFractalShape(size, subdivisions) {
