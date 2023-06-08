@@ -21,6 +21,8 @@ let subdivisionFactor = 1.0; // Factor to determine the size of subdivisions
 let minThickness = 0.5; // Minimum thickness for lines
 let maxThickness = 5; // Maximum thickness for lines
 
+let currentSubdivisions = 0; // Current number of subdivisions
+
 function preload() {
   song = loadSound('N217.mp3'); // Load the sound file
 }
@@ -79,13 +81,13 @@ function draw() {
   ambientMaterial(255);
   specularMaterial(255);
 
-  let subdivisions = floor(map(filteredAmplitude, minAmplitude, maxAmplitude, maxSubdivisions, minSubdivisions)); // Calculate the subdivisions based on the filtered amplitude
-
   // Adjust the thickness based on frequency ranges
-  let thickness = map(lowFreqRange, 0, 255, minThickness, maxThickness);
+  let thickness = map(highFreqRange, 0, 255, minThickness, maxThickness);
   strokeWeight(thickness);
 
-  drawFractalShape(shapeSize, subdivisions);
+  updateSubdivisions(lowFreqRange); // Update the number of subdivisions based on low frequency range
+
+  drawFractalShape(shapeSize, currentSubdivisions); // Draw the fractal shape with the current number of subdivisions
 
   shapeTimer++;
 
@@ -98,6 +100,15 @@ function draw() {
   }
 
   noiseOffset += noiseIncrement; // Increment the Perlin noise offset
+}
+
+function updateSubdivisions(lowFreqRange) {
+  // Calculate the target number of subdivisions based on the low frequency range
+  let targetSubdivisions = map(lowFreqRange, 0, 255, minSubdivisions, maxSubdivisions);
+  
+  // Smoothly transition the current subdivisions to the target subdivisions
+  currentSubdivisions += (targetSubdivisions - currentSubdivisions) * easing;
+  currentSubdivisions = constrain(currentSubdivisions, minSubdivisions, maxSubdivisions);
 }
 
 function drawFractalShape(size, subdivisions) {
