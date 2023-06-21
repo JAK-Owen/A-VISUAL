@@ -14,8 +14,8 @@ let maxAmplitude = 1.0;
 let minSubdivisions = 0;
 let maxSubdivisions = 3;
 let subdivisionFactor = 0.5; // Adjust the maximum scale for a less jumpy appearance
-let minThickness = 0.5;
-let maxThickness = 5;
+let particleSize = 5; // Adjust the size of the particles
+let particleCount = 8; // Adjust the number of particles per box
 
 function preload() {
   song = loadSound('N217.mp3');
@@ -74,7 +74,7 @@ function draw() {
 
   let subdivisions = floor(map(lowFreqRange, 0, 255, minSubdivisions, maxSubdivisions));
 
-  let thickness = map(highFreqRange, 0, 255, minThickness, maxThickness);
+  let thickness = map(highFreqRange, 0, 255, 0.5, 5); // Adjust the thickness range
   strokeWeight(thickness);
 
   drawFractalShape(shapeSize, subdivisions);
@@ -84,7 +84,16 @@ function draw() {
 
 function drawFractalShape(size, subdivisions) {
   if (subdivisions <= 0) {
-    box(size.width, size.height, size.depth);
+    for (let i = 0; i < particleCount; i++) {
+      let x = size.width * (i % 2 === 0 ? subdivisionFactor : -subdivisionFactor);
+      let y = size.height * (i % 4 < 2 ? subdivisionFactor : -subdivisionFactor);
+      let z = size.depth * (i < 4 ? subdivisionFactor : -subdivisionFactor);
+
+      push();
+      translate(x, y, z);
+      sphere(particleSize); // Use the sphere() function to draw particles
+      pop();
+    }
   } else {
     let amplitudeFactor = map(filteredAmplitude, minAmplitude, maxAmplitude, 0.5, 1.5);
 
