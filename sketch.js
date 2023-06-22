@@ -31,16 +31,16 @@ function setup() {
   fft = new p5.FFT();
   fft.setInput(song);
 
-  // Create background particles
+  // Initialize background particles
   for (let i = 0; i < particleCount; i++) {
-    let particle = {
-      position: createVector(random(-width * 0.5, width * 0.5), random(-height * 0.5, height * 0.5), random(-width * 0.5, width * 0.5)),
-      size: random(1, 10),
+    particles.push({
+      position: createVector(random(-width / 2, width / 2), random(-height / 2, height / 2), random(-width / 2, width / 2)),
+      velocity: createVector(random(-1, 1), random(-1, 1), random(-1, 1)).normalize(),
+      size: random(1, 5),
       speed: random(0.001, 0.01),
-      angle: random(TWO_PI),
-      axis: p5.Vector.random3D()
-    };
-    particles.push(particle);
+      axis: p5.Vector.random3D(),
+      angle: 0
+    });
   }
 }
 
@@ -81,21 +81,6 @@ function draw() {
   let rotationAngle = map(noiseValue, 0, 1, -PI, PI) * 0.5;
   rotateZ(rotationAngle);
 
-  // Render background particles
-  for (let i = 0; i < particles.length; i++) {
-    let particle = particles[i];
-    particle.angle += particle.speed;
-    let axis = particle.axis.copy().mult(particle.size);
-    particle.position.x = particle.position.x + random(-1, 1);
-    particle.position.y = particle.position.y + random(-1, 1);
-    particle.position.z = particle.position.z + random(-1, 1);
-
-    push();
-    translate(particle.position.x, particle.position.y, particle.position.z);
-    sphere(particle.size); // Use the sphere() function to draw particles
-    pop();
-  }
-
   stroke(255);
   noFill();
   ambientMaterial(255);
@@ -106,12 +91,16 @@ function draw() {
   let thickness = map(highFreqRange, 0, 255, 0.5, 5); // Adjust the thickness range
   strokeWeight(thickness);
 
-  push();
-  translate(0, 0, -shapeSize.depth * 0.5); // Translate the shape to the front of the scene
   drawFractalShape(shapeSize, subdivisions);
-  pop();
 
   noiseOffset += noiseIncrement;
+
+  // Render background particles
+  for (let i = 0; i < particleCount; i++) {
+    let particle = particles[i];
+    updateParticle(particle);
+    renderParticle(particle);
+  }
 }
 
 function drawFractalShape(size, subdivisions) {
@@ -153,6 +142,28 @@ function drawFractalShape(size, subdivisions) {
 
     subdivisionFactor = amplitudeFactor;
   }
+}
+
+function updateParticle(particle) {
+  particle.position.add(particle.velocity);
+
+  // Check boundaries and reset position
+  if (particle.position.x > width / 2 || particle.position.x < -width / 2) {
+    particle.position.x = random(-width / 2, width / 2);
+  }
+  if (particle.position.y > height / 2 || particle.position.y < -height / 2) {
+    particle.position.y = random(-height / 2, height / 2);
+  }
+  if (particle.position.z > width / 2 || particle.position.z < -width / 2) {
+    particle.position.z = random(-width / 2, width / 2);
+  }
+}
+
+function renderParticle(particle) {
+  push();
+  translate(particle.position.x, particle.position.y, particle.position.z);
+  sphere(particle.size);
+  pop();
 }
 
 function windowResized() {
