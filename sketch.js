@@ -15,7 +15,9 @@ let minSubdivisions = 0;
 let maxSubdivisions = 3;
 let subdivisionFactor = 0.5; // Adjust the maximum scale for a less jumpy appearance
 let particleSize = 5; // Adjust the size of the particles
-let particleCount = 8; // Adjust the number of particles per box
+let particleCount = 100; // Adjust the number of particles in the background
+
+let particles = []; // Array to store background particles
 
 function preload() {
   song = loadSound('N217.mp3');
@@ -28,6 +30,18 @@ function setup() {
   analyzer.setInput(song);
   fft = new p5.FFT();
   fft.setInput(song);
+
+  // Create background particles
+  for (let i = 0; i < particleCount; i++) {
+    let particle = {
+      position: createVector(random(-width * 0.5, width * 0.5), random(-height * 0.5, height * 0.5), random(-width * 0.5, width * 0.5)),
+      size: random(1, 10),
+      speed: random(0.001, 0.01),
+      angle: random(TWO_PI),
+      axis: p5.Vector.random3D()
+    };
+    particles.push(particle);
+  }
 }
 
 function draw() {
@@ -67,6 +81,21 @@ function draw() {
   let rotationAngle = map(noiseValue, 0, 1, -PI, PI) * 0.5;
   rotateZ(rotationAngle);
 
+  // Render background particles
+  for (let i = 0; i < particles.length; i++) {
+    let particle = particles[i];
+    particle.angle += particle.speed;
+    let axis = particle.axis.copy().mult(particle.size);
+    particle.position.x = particle.position.x + random(-1, 1);
+    particle.position.y = particle.position.y + random(-1, 1);
+    particle.position.z = particle.position.z + random(-1, 1);
+
+    push();
+    translate(particle.position.x, particle.position.y, particle.position.z);
+    sphere(particle.size); // Use the sphere() function to draw particles
+    pop();
+  }
+
   stroke(255);
   noFill();
   ambientMaterial(255);
@@ -77,7 +106,10 @@ function draw() {
   let thickness = map(highFreqRange, 0, 255, 0.5, 5); // Adjust the thickness range
   strokeWeight(thickness);
 
+  push();
+  translate(0, 0, -shapeSize.depth * 0.5); // Translate the shape to the front of the scene
   drawFractalShape(shapeSize, subdivisions);
+  pop();
 
   noiseOffset += noiseIncrement;
 }
